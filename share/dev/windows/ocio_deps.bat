@@ -117,7 +117,7 @@ set IS_VCPKG_PRESENT=False && if ErrorLevel 1 ( set IS_VCPKG_PRESENT=False ) && 
 
 if %IS_VCPKG_PRESENT%==False (
     echo Vcpkg is needed to install the following OCIO dependencis: openimageio, freeglut and glew.
-    set /p AUTO_VCPKG=Do you want to install Vcpkg? [y/n]:
+    set /p AUTO_VCPKG=Do you want to install Vcpkg in [!VCPKG_INSTALL_DIR!]? [y/n]:
 
     if !AUTO_VCPKG!==y (
         echo.
@@ -167,6 +167,7 @@ if %isX64%==1 (
         echo **************************************************************************************
         vcpkg install openimageio:x64-windows
         set VCPKG_INTEGRATE=1
+        set IS_OPENIMAGEIO_PRESENT=1
     ) else (
         if !IS_OPENIMAGEIO_PRESENT!==0 (
             echo Without OpenImageIO, some part of OCIO will not be built. Please install it with this script or manually.
@@ -188,6 +189,7 @@ if %isX64%==1 (
         echo **************************************************************************************
         vcpkg install freeglut:x64-windows
         set VCPKG_INTEGRATE=1
+        set IS_FREEGLUT_PRESENT=1
     ) else (
         if !IS_FREEGLUT_PRESENT!==0 (
             echo Without Freeglut, some part of OCIO will not be built. Please install it with this script or manually
@@ -209,6 +211,7 @@ if %isX64%==1 (
         echo **************************************************************************************
         vcpkg install glew:x64-windows
         set VCPKG_INTEGRATE=1
+        set IS_GLEW_PRESENT=1
     ) else (
         if !IS_GLEW_PRESENT!==0 (
             echo Without Glew, some part of OCIO will not be built. Please install it with this script or manually.
@@ -253,13 +256,34 @@ if %isX64%==1 (
             echo Installing python documentation dependencies...
             rem NOTE: Change path based on script location
             pip install -r %PYTHON_DOCUMENTATION_REQUIREMENTS%
+            where /q python
+            if not ErrorLevel 1 (
+                for /f %%p in ('python -c "import os, sys; print(os.path.dirname(sys.executable))"') do SET PYTHON_PATH=%%p
+            )
         ) else (
             exit /b
         )
     )
 )
 
-echo done
+rem Output summary
+echo **************************************************************************************************************
+echo **                                                                                                          **
+echo ** Summary                                                                                                  **
+echo **                                                                                                          **
+echo **************************************************************************************************************
+echo.**
+echo.** Vcpkg location:           !VCPKG_INSTALL_DIR!
+if !IS_OPENIMAGEIO_PRESENT!==1 echo.** OpenImageIO:              !VCPKG_INSTALL_DIR!\packages\openimageio_x64-windows
+if !IS_FREEGLUT_PRESENT!==1 echo.** Freeglut:                 !VCPKG_INSTALL_DIR!\packages\freeglut_x64-windows
+if !IS_GLEW_PRESENT!==1 echo.** Glew:                     !VCPKG_INSTALL_DIR!\packages\glew_x64-windows
+echo.**                                                                                                          
+if Defined PYTHON_PATH (
+    echo.** Python packages location: %PYTHON_PATH%\lib\site-packages
+    echo.**  
+)                                                                                                                                                                              
+echo **************************************************************************************************************
+
 exit /b 0
 
 
