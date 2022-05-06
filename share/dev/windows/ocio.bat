@@ -1,9 +1,6 @@
 @echo OFF
 setlocal enabledelayedexpansion
 
-rem Usage: ocio.bat Release
-rem Usage: ocio.bat Debug
-
 rem Build type - Release or Debug
 set CMAKE_BUILD_TYPE=Release
 
@@ -233,7 +230,7 @@ echo **                                                                         
 echo ** Script to help build and install OCIO                                                                    **
 echo **                                                                                                          **
 echo **************************************************************************************************************
-echo Usage: ocio_deps --vcpkg <path to vcpkg> [OPTIONS]...
+echo Usage: ocio --vcpkg <path to vcpkg> [OPTIONS]...
 echo.
 echo Please consider modifying the following script variables to reduce the number of options needed:
 echo    VCPKG_PATH
@@ -246,7 +243,7 @@ echo Mandatory options:
 echo --vcpkg        Vcpkg location
 echo.
 echo Optional options depending on the environment:
-echo --python       Python installation
+echo --python       Python installation location
 echo.
 echo --msvs         vcvars64.bat location
 echo                Default: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build

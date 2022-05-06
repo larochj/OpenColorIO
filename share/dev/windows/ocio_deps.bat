@@ -229,7 +229,7 @@ if %isX64%==1 (
     echo **    six                                                                           **
     echo **    testresources                                                                 **
     echo **    recommonmark                                                                  **
-    echo **    sphinx-p1ress-theme                                                           **
+    echo **    sphinx-press-theme                                                           **
     echo **    sphinx-tabs                                                                   **
     echo **    breathe                                                                       **
     echo **************************************************************************************
@@ -268,15 +268,14 @@ echo.
 echo **************************************************************************************
 echo ** Verify and install OCIO dependencies                                             **
 echo **                                                                                  **
-echo ** It will not install everything needed.                                           **
-echo ** It assumed that atleast the following are installed:                             **
+echo ** Before running this script, please see the README.md file                        **
+echo ** and manually install the following:                                              **
 echo **    - Git                                                                         **
 echo **    - Python and Pip                                                              **
 echo **    - CMake                                                                       **
 echo **    - Microsoft Visual Studio                                                     **
-echo ** For this simple script, MS Visual Studio MUST be installed.                      **
-echo ** Some modifications will need to be done if using something else.                 **
 echo **                                                                                  **
+echo ** Modifications are needed if Microsoft Visual Studio is not used.                 **
 echo **                                                                                  **
 echo ** Depending on presence and choices, the following could be installed:             **
 echo **    - Vcpkg                                                                       **
@@ -288,7 +287,7 @@ echo **    - Python documentations (optional):                                  
 echo **          six                                                                     **
 echo **          testresources                                                           **
 echo **          recommonmark                                                            **
-echo **          sphinx-p1ress-theme                                                     **
+echo **          sphinx-press-theme                                                     **
 echo **          sphinx-tabs                                                             **
 echo **          breathe                                                                 **
 echo **************************************************************************************
