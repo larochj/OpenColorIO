@@ -230,7 +230,7 @@ if Not "%CMAKE_CONFIGURE_STATUS%"=="Failed" (
 rem Run cmake --install only if cmake --build was successful.
 if Not "%CMAKE_BUILD_STATUS%"=="Failed" (
     rem Install OCIO
-    ::cmake --install %BUILD_PATH% --config %CMAKE_BUILD_TYPE% --prefix %INSTALL_PATH%
+    cmake --install %BUILD_PATH% --config %CMAKE_BUILD_TYPE% --prefix %INSTALL_PATH%
     if not ErrorLevel 1 (
         set CMAKE_INSTALL_STATUS=Ok
     ) else (
