@@ -85,6 +85,12 @@ if ErrorLevel 1 (
     exit /b
 )
 
+IF NOT EXIST "%PYTHON_DOCUMENTATION_REQUIREMENTS%" ( 
+    echo.
+    echo Could not find %PYTHON_DOCUMENTATION_REQUIREMENTS%.
+    exit /b
+)
+
 echo Checking for CMake...
 where /q cmake
 if ErrorLevel 1 (
@@ -116,7 +122,7 @@ where /q vcpkg
 set IS_VCPKG_PRESENT=False && if ErrorLevel 1 ( set IS_VCPKG_PRESENT=False ) && if EXIST !VCPKG_INSTALL_DIR!\vcpkg.exe ( set IS_VCPKG_PRESENT=True )
 
 if %IS_VCPKG_PRESENT%==False (
-    echo Vcpkg is needed to install the following OCIO dependencis: openimageio, freeglut and glew.
+    echo Vcpkg is needed to install the following OCIO dependencies: openimageio, freeglut and glew.
     set /p AUTO_VCPKG=Do you want to install Vcpkg in [!VCPKG_INSTALL_DIR!]? [y/n]:
 
     if !AUTO_VCPKG!==y (
@@ -320,7 +326,7 @@ echo Usage: ocio_deps --vcpkg <path to vcpkg> [OPTIONS]...
 echo.
 echo Mandatory option:
 echo --vcpkg        path to an existing vcpkg installation
-echo                or path where you want to install it
+echo                or path where you want to install vcpkg
 exit /b 0
 
 

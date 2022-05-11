@@ -7,7 +7,7 @@ set CMAKE_BUILD_TYPE=Release
 rem Vcpkg location
 set VCPKG_PATH=
 rem OpenColorIO source location
-set OCIO_PATH=../../../
+set OCIO_PATH=
 rem OpenColorIO build location
 rem defaut to %TEMP% directory
 set BUILD_PATH=%TEMP%\OCIO\build
@@ -84,6 +84,13 @@ IF NOT EXIST "%VCPKG_PATH%" (
     exit /b
 )
 
+IF NOT EXIST "%OCIO_PATH%" ( 
+    echo Could not find OCIO source. Please provide the location for ocio or modify OCIO_PATH in this script.
+    rem The double dash are in quote here because otherwise the echo command thow an error.
+    echo "--ocio <path>"
+    exit /b
+)
+
 where /q python
 if not ErrorLevel 1 (
     for /f %%p in ('python -c "import os, sys; print(os.path.dirname(sys.executable))"') do SET PYTHON_PATH=%%p
@@ -100,13 +107,6 @@ IF NOT EXIST "%MSVS_PATH%" (
     rem The double dash are in quote here because otherwise the echo command thow an error.
     echo "--msvs <path>"
     echo E.g. C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build
-    exit /b
-)
-
-IF NOT EXIST "%OCIO_PATH%" ( 
-    echo Could not find OCIO source. Please provide the location for ocio or modify OCIO_PATH in thie script.
-    rem The double dash are in quote here because otherwise the echo command thow an error.
-    echo "--ocio <path>"
     exit /b
 )
 
@@ -192,22 +192,22 @@ IF NOT EXIST "%PYTHON_PATH%" (
 if %DO_CONFIGURE%==1 (
     echo Running CMake...
     cmake -B "%BUILD_PATH%"^
-    -DOCIO_INSTALL_EXT_PACKAGES=ALL^
-    -DCMAKE_BUILD_TYPE=%CMAKE_BUILD_TYPE%^
-    -DGLEW_ROOT=%GLEW_ROOT%^
-    -DGLUT_ROOT=%GLUT_ROOT%^
-    -DOpenImageIO_ROOT=%OPENIMAGEIO_DIR%^
-    -DOCIO_BUILD_PYTHON=ON^
-    -DPython_ROOT=%PYTHON_PATH%^
-    -DBUILD_SHARED_LIBS=ON^
-    -DOCIO_BUILD_APPS=ON^
-    -DOCIO_BUILD_TESTS=ON^
-    -DOCIO_BUILD_GPU_TESTS=ON^
-    -DOCIO_BUILD_DOCS=OFF^
-    -DOCIO_USE_SSE=ON^
-    -DOCIO_WARNING_AS_ERROR=ON^
-    -DOCIO_BUILD_JAVA=OFF^
-    %OCIO_PATH%
+        -DOCIO_INSTALL_EXT_PACKAGES=ALL^
+        -DCMAKE_BUILD_TYPE=%CMAKE_BUILD_TYPE%^
+        -DGLEW_ROOT=%GLEW_ROOT%^
+        -DGLUT_ROOT=%GLUT_ROOT%^
+        -DOpenImageIO_ROOT=%OPENIMAGEIO_DIR%^
+        -DOCIO_BUILD_PYTHON=ON^
+        -DPython_ROOT=%PYTHON_PATH%^
+        -DBUILD_SHARED_LIBS=ON^
+        -DOCIO_BUILD_APPS=ON^
+        -DOCIO_BUILD_TESTS=ON^
+        -DOCIO_BUILD_GPU_TESTS=ON^
+        -DOCIO_BUILD_DOCS=OFF^
+        -DOCIO_USE_SSE=ON^
+        -DOCIO_WARNING_AS_ERROR=ON^
+        -DOCIO_BUILD_JAVA=OFF^
+        %OCIO_PATH%
 
     if not ErrorLevel 1 (
         set CMAKE_CONFIGURE_STATUS=Ok
@@ -286,17 +286,15 @@ echo    PYTHON_PATH
 echo    MSVS_PATH
 echo.
 echo Mandatory options:
-echo --vcpkg        Vcpkg location
+echo --vcpkg        path to an existing vcpkg installation
+echo.
+echo --ocio         path to OCIO source code
 echo.
 echo Optional options depending on the environment:
 echo --python       Python installation location
 echo.
 echo --msvs         vcvars64.bat location
 echo                Default: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build
-echo.
-echo --ocio         path to OCIO source code
-echo                Note: If the script is run from its repository location, this should not be specified.
-echo                Default: ../../../
 echo.
 echo --b            build location
 echo                Default: %TEMP%\OCIO\build

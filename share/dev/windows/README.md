@@ -7,7 +7,7 @@
 - Install Doxygen (optional: only for python documentations)
 
 ## Microsoft Visual Studio (Desktop development with C++)
-Please use the official Microsfot Visual Studio installer.
+Please use the official Microsoft Visual Studio installer.
 > See https://visualstudio.microsoft.com/downloads/
 
 ## Python
@@ -45,12 +45,12 @@ The script can be used to install the following:
 
 Run ocio script and follow the steps.
 ```bash
-Ocio.bat --vcpkg <path to vcpkg root>
+ocio_deps.bat --vcpkg <path to vcpkg root>
 
 See ocio_deps --help:
 
 Mandatory option:
---vcpkg        Vcpkg location or location where you want to install it
+--vcpkg        path to an existing vcpkg installation or path where you want to install vcpkg
 ```
 
 # Running the script to build and install OCIO
@@ -60,20 +60,19 @@ Mandatory option:
 # Options can be removed by modifying the value inside ocio.bat script.
 # see the top of ocio.bat file
 
-# Release with DEFAULT build and install path
-ocio.bat --vcpkg <vcpkg directory> --type Release
-# Debug with DEFAULT build and install path
-ocio.bat --vcpkg <vcpkg directory> --type Debug
-
-# Release with CUSTOM build path (--b) and install path (--i)
-ocio.bat --vcpkg <vcpkg directory> --type Release --b C:\ocio\__build --i C:\ocio\__install
-# Debug with CUSTOM build path (--b) and install path (--i)
-ocio.bat --vcpkg <vcpkg directory> --type Debug --b C:\ocio\__build --i C:\ocio\__install
+# Produce a release build using the default build and install paths.
+ocio.bat --vcpkg <vcpkg directory> --type Release --ocio <path to OCIO source>
+# Produce a debug build using the default build and install paths.
+ocio.bat --vcpkg <vcpkg directory> --type Debug --ocio <path to OCIO source>
+# Produce a release build using a custom build path (--b) and a custom install paths (--i).
+ocio.bat --vcpkg <vcpkg directory> --type Release --b C:\ocio\__build --i C:\ocio\__install --ocio <path to OCIO source>
 
 See ocio --help:
 
 Mandatory options:
---vcpkg        Vcpkg location
+--vcpkg        path to an existing vcpkg installation
+
+--ocio         path to OCIO source code
 
 Optional options depending on the environment:
 --python       Python installation location
@@ -81,16 +80,14 @@ Optional options depending on the environment:
 --msvs         vcvars64.bat location
                Default: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build
 
---ocio         path to OCIO source code
-               Note: If the script is run from its repository location, this should not be specified.
-               Default: ../../../
+--b            build location
+               Default: C:\Users\cfuoco\AppData\Local\Temp\OCIO\build
 
---b            OCIO build location
-               Default: C:\Users\WDAGUtilityAccount\AppData\Local\Temp\OCIO\build
-
---i            OCIO installation location
-               Default: C:\Users\WDAGUtilityAccount\AppData\Local\Temp\OCIO\install
+--i            installation location
+               Default: C:\Users\cfuoco\AppData\Local\Temp\OCIO\install
 
 --type         Release or Debug
                Default: Release
+--configure    Run cmake configure or not
+               Default: false
 ```
