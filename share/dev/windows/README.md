@@ -77,7 +77,7 @@ Mandatory options:
 Optional options depending on the environment:
 --python       Python installation location
 
---msvs         vcvars64.bat location
+--msvs         path where to find vcvars64.bat from Microsoft Visual Studio
                Default: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build
 
 --b            build location

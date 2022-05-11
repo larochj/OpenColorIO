@@ -293,7 +293,7 @@ echo.
 echo Optional options depending on the environment:
 echo --python       Python installation location
 echo.
-echo --msvs         vcvars64.bat location
+echo --msvs         path where to find vcvars64.bat from Microsoft Visual Studio
 echo                Default: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build
 echo.
 echo --b            build location
