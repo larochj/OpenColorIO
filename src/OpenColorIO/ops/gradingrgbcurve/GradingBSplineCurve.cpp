@@ -571,6 +571,16 @@ GradingBSplineCurveRcPtr GradingBSplineCurveImpl::createEditableCopy() const
     return res;
 }
 
+BSplineCurveType GradingBSplineCurveImpl::getCurveType() const
+{
+    return m_curveType;
+}
+
+void GradingBSplineCurveImpl::setCurveType(BSplineCurveType curveType)
+{
+    m_curveType = curveType;
+}
+
 size_t GradingBSplineCurveImpl::getNumControlPoints() const noexcept
 {
     return m_controlPoints.size();
@@ -693,21 +703,6 @@ bool IsGradingCurveIdentity(const ConstGradingBSplineCurveRcPtr & curve)
     }
     return false;
 }
-
-//------------------------------------------------------------------------------------------------
-//
-BSplineCurveType GradingBSplineCurveImpl::getCurveType() const
-{
-    return m_curveType;
-}
-
-//------------------------------------------------------------------------------------------------
-//
-void GradingBSplineCurveImpl::setCurveType(BSplineCurveType curveType)
-{
-    m_curveType = curveType;
-}
-
 
 //------------------------------------------------------------------------------------------------
 //
