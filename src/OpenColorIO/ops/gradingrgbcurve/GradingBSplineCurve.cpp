@@ -43,78 +43,78 @@ void PrepHueCurveData(const std::vector<GradingControlPoint>& ctrlPnts,
                 bool isPeriodic,
                 bool isHorizontal)
  {
-   size_t numCtrlPnts = ctrlPnts.size();     
-   for (unsigned i = 0; i < numCtrlPnts; ++i)
-   {
-     const float xval = ctrlPnts[ i ].m_x;
-     const float yval = ctrlPnts[ i ].m_y;
-     // Wrap periodic x values into [0,1).
-     if (isPeriodic && (xval < 0.f))
+     size_t numCtrlPnts = ctrlPnts.size();     
+     for (unsigned i = 0; i < numCtrlPnts; ++i)
      {
-       outCtrlPnts.push_back(GradingControlPoint(xval + 1.f, isHorizontal ? yval : yval + 1.f));
+         const float xval = ctrlPnts[ i ].m_x;
+         const float yval = ctrlPnts[ i ].m_y;
+         // Wrap periodic x values into [0,1).
+         if (isPeriodic && (xval < 0.f))
+         {
+             outCtrlPnts.push_back(GradingControlPoint(xval + 1.f, isHorizontal ? yval : yval + 1.f));
+         }
+         else if (isPeriodic && (xval >= 1.f))
+         {
+             outCtrlPnts.push_back(GradingControlPoint(xval - 1.f, isHorizontal ? yval : yval - 1.f));
+         }
+         else
+         {
+             outCtrlPnts.push_back(GradingControlPoint(xval, yval));
+         }
      }
-     else if (isPeriodic && (xval >= 1.f))
+  
+     // Sort x and y based on x order.
+     for (unsigned i = 0; i < numCtrlPnts; ++i)
      {
-       outCtrlPnts.push_back(GradingControlPoint(xval - 1.f, isHorizontal ? yval : yval - 1.f));
+         unsigned min_index = i;
+         float min_val = outCtrlPnts[i].m_x;
+         for (unsigned j = i + 1; j < numCtrlPnts; ++j)
+         {
+           if (outCtrlPnts[j].m_x < min_val)
+           {
+               min_val = outCtrlPnts[j].m_x;
+               min_index = j;
+           }
+         }
+    
+         std::swap( outCtrlPnts[i], outCtrlPnts[min_index] );
      }
-     else
-     {
-       outCtrlPnts.push_back(GradingControlPoint(xval, yval));
-     }
-   }
-
-   // Sort x and y based on x order.
-   for (unsigned i = 0; i < numCtrlPnts; ++i)
-   {
-     unsigned min_index = i;
-     float min_val = outCtrlPnts[i].m_x;
-     for (unsigned j = i + 1; j < numCtrlPnts; ++j)
-     {
-       if (outCtrlPnts[j].m_x < min_val)
-       {
-         min_val = outCtrlPnts[j].m_x;
-         min_index = j;
-       }
-     }
-
-     std::swap( outCtrlPnts[i], outCtrlPnts[min_index] );
-   }
-
-   // Ensure that there is a minimum space between the x values.
-   const float tol = 2e-3f;
-   const float x_span = outCtrlPnts[numCtrlPnts - 1].m_x - outCtrlPnts[0].m_x;
-   for (unsigned i = 1; i < outCtrlPnts.size(); ++i)
-   {
-     if ( (outCtrlPnts[i].m_x - outCtrlPnts[i - 1].m_x) < x_span * tol )
-     {
-       outCtrlPnts[i].m_x = outCtrlPnts[i - 1].m_x + x_span * tol;
-     }
-   }
-   if (!isHorizontal)
-   {
-     const float y_span = outCtrlPnts[numCtrlPnts - 1].m_y - outCtrlPnts[0].m_y;
+  
+     // Ensure that there is a minimum space between the x values.
+     const float tol = 2e-3f;
+     const float x_span = outCtrlPnts[numCtrlPnts - 1].m_x - outCtrlPnts[0].m_x;
      for (unsigned i = 1; i < outCtrlPnts.size(); ++i)
      {
-       if ( (outCtrlPnts[i].m_y - outCtrlPnts[i - 1].m_y) < y_span * tol )
+       if ( (outCtrlPnts[i].m_x - outCtrlPnts[i - 1].m_x) < x_span * tol )
        {
-         outCtrlPnts[i].m_y = outCtrlPnts[i - 1].m_y + y_span * tol;
+           outCtrlPnts[i].m_x = outCtrlPnts[i - 1].m_x + x_span * tol;
        }
      }
-   }
+     if (!isHorizontal)
+     {
+         const float y_span = outCtrlPnts[numCtrlPnts - 1].m_y - outCtrlPnts[0].m_y;
+         for (unsigned i = 1; i < outCtrlPnts.size(); ++i)
+         {
+             if ( (outCtrlPnts[i].m_y - outCtrlPnts[i - 1].m_y) < y_span * tol )
+             {
+                 outCtrlPnts[i].m_y = outCtrlPnts[i - 1].m_y + y_span * tol;
+             }
+         }
+     }
 
-   if (isPeriodic)
-   {
-     // Copy a value from each side and wrap it around to the other side.
-     GradingControlPoint firstCtrlPnt = outCtrlPnts[numCtrlPnts - 1];
-     firstCtrlPnt.m_x -= 1.f;
-     firstCtrlPnt.m_y = isHorizontal ? firstCtrlPnt.m_y : firstCtrlPnt.m_y - 1.f;
-     outCtrlPnts.insert(outCtrlPnts.begin(), firstCtrlPnt);
-     
-     GradingControlPoint lastCtrlPnt = outCtrlPnts[1];
-     lastCtrlPnt.m_x += 1.f;
-     lastCtrlPnt.m_y = isHorizontal ? lastCtrlPnt.m_y : lastCtrlPnt.m_y + 1.f;
-     outCtrlPnts.push_back(lastCtrlPnt);
-   }
+     if (isPeriodic)
+     {
+         // Copy a value from each side and wrap it around to the other side.
+         GradingControlPoint firstCtrlPnt = outCtrlPnts[numCtrlPnts - 1];
+         firstCtrlPnt.m_x -= 1.f;
+         firstCtrlPnt.m_y = isHorizontal ? firstCtrlPnt.m_y : firstCtrlPnt.m_y - 1.f;
+         outCtrlPnts.insert(outCtrlPnts.begin(), firstCtrlPnt);
+         
+         GradingControlPoint lastCtrlPnt = outCtrlPnts[1];
+         lastCtrlPnt.m_x += 1.f;
+         lastCtrlPnt.m_y = isHorizontal ? lastCtrlPnt.m_y : lastCtrlPnt.m_y + 1.f;
+         outCtrlPnts.push_back(lastCtrlPnt);
+     }
  }
 
 //------------------------------------------------------------------------------------------------
@@ -123,70 +123,70 @@ float CalcKsi(unsigned i,
                const std::vector<GradingControlPoint>& outCtrlPnts,
                const std::vector<float>& slopes)
 {
-  const GradingControlPoint& p0 = outCtrlPnts[i];
-  const GradingControlPoint& p1 = outCtrlPnts[i + 1];
+    const GradingControlPoint& p0 = outCtrlPnts[i];
+    const GradingControlPoint& p1 = outCtrlPnts[i + 1];
 
-  const float k = 0.2f;
-  const float dx = p1.m_x - p0.m_x;
-  const float secantSlope = (p1.m_y - p0.m_y) / dx;
-  float secant = secantSlope;
-  float m0 = slopes[i];
-  float m1 = slopes[i + 1];
-  if (secant < 0.f)
-  {
-    m0 = -slopes[i];  m1 = -slopes[i + 1];
-    secant = -secant;
-  }
+    const float k = 0.2f;
+    const float dx = p1.m_x - p0.m_x;
+    const float secantSlope = (p1.m_y - p0.m_y) / dx;
+    float secant = secantSlope;
+    float m0 = slopes[i];
+    float m1 = slopes[i + 1];
+    if (secant < 0.f)
+    {
+        m0 = -slopes[i];  m1 = -slopes[i + 1];
+        secant = -secant;
+    }
 
-  const float x_mid = p0.m_x + 0.5f * dx;
-  const float left_bnd = p0.m_x + dx * k;
-  const float right_bnd = p1.m_x - dx * k;
-  float top_bnd = left_bnd;
-  float bottom_bnd = right_bnd;
-  float m_min = m0;
-  float m_max = m1;
-  if (m0 > m1)
-  {
-    m_max = m0;  m_min = m1;
-    top_bnd = right_bnd;  bottom_bnd = left_bnd;
-  }
+    const float x_mid = p0.m_x + 0.5f * dx;
+    const float left_bnd = p0.m_x + dx * k;
+    const float right_bnd = p1.m_x - dx * k;
+    float top_bnd = left_bnd;
+    float bottom_bnd = right_bnd;
+    float m_min = m0;
+    float m_max = m1;
+    if (m0 > m1)
+    {
+        m_max = m0;  m_min = m1;
+        top_bnd = right_bnd;  bottom_bnd = left_bnd;
+    }
 
-  const float dm = m_max - m_min;
-  const float b = 1.f - 0.5f * k;
-  const float b_high = m_min + b * dm;
-  const float b_low = m_min + (1.f - b) * dm;
-  const float bbb = m_max * 4.f;
-  const float bb = m_max * 1.1f;
-  const float m_rel_diff = dm / std::max(0.01f, m_max);
-  const float alpha = std::max( 0.f, std::min( (m_rel_diff - 0.05f) / (0.75f - 0.05f), 1.f ) );
-  top_bnd = x_mid + alpha * (top_bnd - x_mid);
-  bottom_bnd = x_mid + alpha * (bottom_bnd - x_mid);
+    const float dm = m_max - m_min;
+    const float b = 1.f - 0.5f * k;
+    const float b_high = m_min + b * dm;
+    const float b_low = m_min + (1.f - b) * dm;
+    const float bbb = m_max * 4.f;
+    const float bb = m_max * 1.1f;
+    const float m_rel_diff = dm / std::max(0.01f, m_max);
+    const float alpha = std::max( 0.f, std::min( (m_rel_diff - 0.05f) / (0.75f - 0.05f), 1.f ) );
+    top_bnd = x_mid + alpha * (top_bnd - x_mid);
+    bottom_bnd = x_mid + alpha * (bottom_bnd - x_mid);
 
-  // Calculate the middle knot.
-  float ksi = 0.f;
-  if (secant >= bbb)
-  {
-    ksi = x_mid;
-  }
-  else if (secant > bb)
-  {
-    const float blend = (secant - bb) / (bbb - bb);
-    ksi = top_bnd + blend * (x_mid - top_bnd);
-  }
-  else if (secant >= b_high)
-  {
-    ksi = top_bnd;
-  }
-  else if ((secant > b_low) && (b_high != b_low))
-  {
-    const float blend = (secant - b_low) / (b_high - b_low);
-    ksi = bottom_bnd + blend * (top_bnd - bottom_bnd);
-  }
-  else
-  {
-    ksi = bottom_bnd;
-  }
-  return ksi;
+    // Calculate the middle knot.
+    float ksi = 0.f;
+    if (secant >= bbb)
+    {
+        ksi = x_mid;
+    }
+    else if (secant > bb)
+    {
+        const float blend = (secant - bb) / (bbb - bb);
+        ksi = top_bnd + blend * (x_mid - top_bnd);
+    }
+    else if (secant >= b_high)
+    {
+        ksi = top_bnd;
+    }
+    else if ((secant > b_low) && (b_high != b_low))
+    {
+        const float blend = (secant - b_low) / (b_high - b_low);
+        ksi = bottom_bnd + blend * (top_bnd - bottom_bnd);
+    }
+    else
+    {
+        ksi = bottom_bnd;
+    }
+    return ksi;
 }
 
 //------------------------------------------------------------------------------------------------
@@ -198,42 +198,42 @@ void FitHueSpline(const std::vector<GradingControlPoint>& outCtrlPnts,
                    std::vector<float>& coefsB,
                    std::vector<float>& coefsC)
 {
-  knots.push_back( outCtrlPnts[0].m_x );
-  unsigned numCtrlPnts = outCtrlPnts.size();
-  for (unsigned i = 0; i < numCtrlPnts - 1; ++i)
-  {
-    const GradingControlPoint& p0 = outCtrlPnts[i];
-    const GradingControlPoint& p1 = outCtrlPnts[i + 1];
-
-    const float dx = p1.m_x - p0.m_x;
-    const float secantSlope = (p1.m_y - p0.m_y) / dx;
-
-    if ( fabsf( (slopes[i] + slopes[i + 1]) - 2.f * secantSlope ) <= 1e-5f )
+    knots.push_back( outCtrlPnts[0].m_x );
+    unsigned numCtrlPnts = outCtrlPnts.size();
+    for (unsigned i = 0; i < numCtrlPnts - 1; ++i)
     {
-      coefsC.push_back( p0.m_y );
-      coefsB.push_back( slopes[i] );
-      coefsA.push_back( 0.5f * (slopes[i + 1] - slopes[i]) / dx );
+        const GradingControlPoint& p0 = outCtrlPnts[i];
+        const GradingControlPoint& p1 = outCtrlPnts[i + 1];
+    
+        const float dx = p1.m_x - p0.m_x;
+        const float secantSlope = (p1.m_y - p0.m_y) / dx;
+    
+        if ( fabsf( (slopes[i] + slopes[i + 1]) - 2.f * secantSlope ) <= 1e-5f )
+        {
+            coefsC.push_back( p0.m_y );
+            coefsB.push_back( slopes[i] );
+            coefsA.push_back( 0.5f * (slopes[i + 1] - slopes[i]) / dx );
+        }
+        else
+        {
+            // Calculate the middle knot.
+            const float ksi = CalcKsi(i, outCtrlPnts, slopes);
+      
+            // Calculate the coefficients.
+            const float m_bar = (2.f * secantSlope - slopes[i + 1]) +
+                                (slopes[i + 1] - slopes[i]) * (ksi - p0.m_x) / (p1.m_x - p0.m_x);
+            const float eta = (m_bar - slopes[i]) / (ksi - p0.m_x);
+            coefsC.push_back( p0.m_y );
+            coefsB.push_back( slopes[i] );
+            coefsA.push_back( 0.5f * eta );
+            coefsC.push_back( p0.m_y + slopes[i] * (ksi - p0.m_x) + 0.5f * eta * (ksi - p0.m_x) * (ksi - p0.m_x) );
+            coefsB.push_back( m_bar );
+            coefsA.push_back( 0.5f * (slopes[i + 1] - m_bar) / (p1.m_x - ksi) );
+            knots.push_back( ksi );
+        }
+    
+        knots.push_back( p1.m_x );
     }
-    else
-    {
-      // Calculate the middle knot.
-      const float ksi = CalcKsi(i, outCtrlPnts, slopes);
-
-      // Calculate the coefficients.
-      const float m_bar = (2.f * secantSlope - slopes[i + 1]) +
-                          (slopes[i + 1] - slopes[i]) * (ksi - p0.m_x) / (p1.m_x - p0.m_x);
-      const float eta = (m_bar - slopes[i]) / (ksi - p0.m_x);
-      coefsC.push_back( p0.m_y );
-      coefsB.push_back( slopes[i] );
-      coefsA.push_back( 0.5f * eta );
-      coefsC.push_back( p0.m_y + slopes[i] * (ksi - p0.m_x) + 0.5f * eta * (ksi - p0.m_x) * (ksi - p0.m_x) );
-      coefsB.push_back( m_bar );
-      coefsA.push_back( 0.5f * (slopes[i + 1] - m_bar) / (p1.m_x - ksi) );
-      knots.push_back( ksi );
-    }
-
-    knots.push_back( p1.m_x );
-  }
 }
  
 //------------------------------------------------------------------------------------------------
@@ -243,108 +243,108 @@ void EstimateHueSlopes(std::vector<GradingControlPoint>& outCtrlPnts,
                         bool isPeriodic,
                         bool isHorizontal)
 {
-  slopes.clear();
-  unsigned numCtrlPnts = outCtrlPnts.size();
-  std::vector<float> secantSlope;
-  std::vector<float> secantLen;
-  for (unsigned i = 0; i < numCtrlPnts - 1; ++i)
-  {
-    const GradingControlPoint& p0 = outCtrlPnts[i];
-    const GradingControlPoint& p1 = outCtrlPnts[i + 1];
-
-    const float del_x = p1.m_x - p0.m_x;  // PrepHueCurveData ensures this is > 0
-    const float del_y = p1.m_y - p0.m_y;
-    secantSlope.push_back( del_y / del_x );
-    secantLen.push_back( sqrt( del_x * del_x + del_y * del_y ) );
-  }
-
-  if (numCtrlPnts == 2)
-  {
-    slopes.push_back( secantSlope[0] );
-    slopes.push_back( secantSlope[0] );
-    return;
-  }
-
-  slopes.push_back(0.f);
-
-  if (isHorizontal)   // All horizontal curves and diagonal hue-hue.
-  {
-    for (unsigned i = 1; i < numCtrlPnts - 1; ++i)
+    slopes.clear();
+    unsigned numCtrlPnts = outCtrlPnts.size();
+    std::vector<float> secantSlope;
+    std::vector<float> secantLen;
+    for (unsigned i = 0; i < numCtrlPnts - 1; ++i)
     {
-      float s = 0.f;
-      float denom = secantSlope[i] + secantSlope[i - 1];
-      if (fabsf(denom) < 1e-3f)
-      {
-        const float minval = denom < 0.f ? -1e-3f : 1e-3f;
-        s = 2.f * secantSlope[i] * secantSlope[i - 1] / minval;
-      }
-      else
-      {
-        s = 2.f * secantSlope[i] * secantSlope[i - 1] / denom;
-      }
-      // Set slope to zero at flat areas or extrema.
-      if ( secantSlope[i] * secantSlope[i - 1] <= 0.f )
-      {
-        s = 0.f;
-      }
-      slopes.push_back( s );
-    }
-    slopes.push_back( 0.5f * ( 3.f * secantSlope[numCtrlPnts - 2] - slopes[numCtrlPnts - 2] ) );
-    slopes[0] = 0.5f * ( 3.f * secantSlope[0] - slopes[1] );
-  }
-  else                // Diagonal curves except hue-hue (LvL and SvS).
-  {
-    unsigned i = 0;
-    while (true)
-    {
-      unsigned j = i;
-      float DL = secantLen[i];
-      while ( ( j < numCtrlPnts - 2 ) && ( fabsf( secantSlope[j + 1] - secantSlope[j] ) < 1e-6f ) )
-      {
-        DL += secantLen[ j + 1 ];
-        j++;
-      }
-      for (unsigned k = i; k <= j; ++k)
-        secantLen[k] = DL;
-      if (j >= numCtrlPnts - 3)
-        break;
-      i = j + 1;
+        const GradingControlPoint& p0 = outCtrlPnts[i];
+        const GradingControlPoint& p1 = outCtrlPnts[i + 1];
+    
+        const float del_x = p1.m_x - p0.m_x;  // PrepHueCurveData ensures this is > 0
+        const float del_y = p1.m_y - p0.m_y;
+        secantSlope.push_back( del_y / del_x );
+        secantLen.push_back( sqrt( del_x * del_x + del_y * del_y ) );
     }
 
-    for (unsigned k = 1; k < numCtrlPnts - 1; ++k)
+    if (numCtrlPnts == 2)
     {
-      const float s = ( secantLen[k] * secantSlope[k] + secantLen[k - 1] * secantSlope[k - 1] ) / 
-                      ( secantLen[k] + secantLen[k - 1] );
-      slopes.push_back( s );
+        slopes.push_back( secantSlope[0] );
+        slopes.push_back( secantSlope[0] );
+        return;
     }
 
-    const float minSlope = 0.01f;
-    slopes.push_back( std::max(minSlope, 0.5f * ( 3.f * secantSlope[numCtrlPnts - 2] - slopes[numCtrlPnts - 2] )) );
-    slopes[0] = std::max(minSlope, 0.5f * ( 3.f * secantSlope[0] - slopes[1] ));
-  }
+    slopes.push_back(0.f);
+
+    if (isHorizontal) // All horizontal curves and diagonal hue-hue.
+    {
+        for (unsigned i = 1; i < numCtrlPnts - 1; ++i)
+        {
+            float s = 0.f;
+            float denom = secantSlope[i] + secantSlope[i - 1];
+            if (fabsf(denom) < 1e-3f)
+            {
+                const float minval = denom < 0.f ? -1e-3f : 1e-3f;
+                s = 2.f * secantSlope[i] * secantSlope[i - 1] / minval;
+            }
+            else
+            {
+                s = 2.f * secantSlope[i] * secantSlope[i - 1] / denom;
+            }
+            // Set slope to zero at flat areas or extrema.
+            if ( secantSlope[i] * secantSlope[i - 1] <= 0.f )
+            {
+                s = 0.f;
+            }
+            slopes.push_back( s );
+        }
+        slopes.push_back( 0.5f * ( 3.f * secantSlope[numCtrlPnts - 2] - slopes[numCtrlPnts - 2] ) );
+        slopes[0] = 0.5f * ( 3.f * secantSlope[0] - slopes[1] );
+    }
+    else // Diagonal curves except hue-hue (LvL and SvS).
+    {
+        unsigned i = 0;
+        while (true)
+        {
+            unsigned j = i;
+            float DL = secantLen[i];
+            while ( ( j < numCtrlPnts - 2 ) && ( fabsf( secantSlope[j + 1] - secantSlope[j] ) < 1e-6f ) )
+            {
+                DL += secantLen[ j + 1 ];
+                j++;
+            }
+            for (unsigned k = i; k <= j; ++k)
+                secantLen[k] = DL;
+            if (j >= numCtrlPnts - 3)
+                break;
+            i = j + 1;
+        }
+    
+        for (unsigned k = 1; k < numCtrlPnts - 1; ++k)
+        {
+            const float s = ( secantLen[k] * secantSlope[k] + secantLen[k - 1] * secantSlope[k - 1] ) / 
+                            ( secantLen[k] + secantLen[k - 1] );
+            slopes.push_back( s );
+        }
+    
+        const float minSlope = 0.01f;
+        slopes.push_back( std::max(minSlope, 0.5f * ( 3.f * secantSlope[numCtrlPnts - 2] - slopes[numCtrlPnts - 2] )) );
+        slopes[0] = std::max(minSlope, 0.5f * ( 3.f * secantSlope[0] - slopes[1] ));
+    }
 
   // Adjust slopes that are not shape-preserving.
   for (unsigned i = 0; i < numCtrlPnts - 1; ++i)
   {
-    float k = 0.2f;
-    if (fabsf(slopes[i]) > fabsf(slopes[i+1]))
-      k = 1.f - k;
-    const float m_near_min = slopes[i] + k * (slopes[i + 1] - slopes[i]);
-    float scale = 1.f;
-    if (m_near_min != 0.f)
-      scale = 0.75f * 2.f * secantSlope[i] / m_near_min;
-    if (scale < 1.f)
-    {
-      slopes[i] = scale * slopes[i];
-      slopes[i + 1] = scale * slopes[i + 1];
-    }
+      float k = 0.2f;
+      if (fabsf(slopes[i]) > fabsf(slopes[i+1]))
+          k = 1.f - k;
+      const float m_near_min = slopes[i] + k * (slopes[i + 1] - slopes[i]);
+      float scale = 1.f;
+      if (m_near_min != 0.f)
+          scale = 0.75f * 2.f * secantSlope[i] / m_near_min;
+      if (scale < 1.f)
+      {
+          slopes[i] = scale * slopes[i];
+          slopes[i + 1] = scale * slopes[i + 1];
+      }
   }
 
   // Copy end slopes from the opposite side.
   if (isPeriodic)
   {
-    slopes[0] = slopes[numCtrlPnts - 2];
-    slopes[numCtrlPnts - 1] = slopes[1];
+      slopes[0] = slopes[numCtrlPnts - 2];
+      slopes[numCtrlPnts - 1] = slopes[1];
   }
 }
 
