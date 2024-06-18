@@ -504,6 +504,9 @@ enum FixedFunctionStyle
     FIXED_FUNCTION_XYZ_TO_xyY,          ///< CIE XYZ to 1931 xy chromaticity coordinates
     FIXED_FUNCTION_XYZ_TO_uvY,          ///< CIE XYZ to 1976 u'v' chromaticity coordinates
     FIXED_FUNCTION_XYZ_TO_LUV,          ///< CIE XYZ to 1976 CIELUV colour space (D65 white)
+    FIXED_FUNCTION_RGB_TO_HSY_LIN,      ///< RGB to HSY (Hue, Saturation, Lightness) using linear
+    FIXED_FUNCTION_RGB_TO_HSY_LOG,      ///< RGB to HSY (Hue, Saturation, Lightness) using log
+    FIXED_FUNCTION_RGB_TO_HSY_VID,      ///< RGB to HSY (Hue, Saturation, Lightness) using video
     FIXED_FUNCTION_ACES_GAMUTMAP_02,    ///< ACES 0.2 Gamut clamping algorithm -- NOT IMPLEMENTED YET
     FIXED_FUNCTION_ACES_GAMUTMAP_07,    ///< ACES 0.7 Gamut clamping algorithm -- NOT IMPLEMENTED YET
     FIXED_FUNCTION_ACES_GAMUT_COMP_13   ///< ACES 1.3 Parametric Gamut Compression (expects ACEScg values)

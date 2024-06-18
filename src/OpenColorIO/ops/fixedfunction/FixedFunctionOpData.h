@@ -41,13 +41,13 @@ public:
         REC2100_SURROUND_FWD,     // Rec.2100 surround correction (takes one double for the gamma param)
         REC2100_SURROUND_INV,     // Rec.2100 surround correction inverse (takes one gamma param)
         RGB_TO_HSV,               // Classic RGB to HSV function
-        RGB_TO_HSY_LOG,           // RGB to HSY (Hue, Saturation, Lightness) using log
-        RGB_TO_HSY_LIN,           // RGB to HSY (Hue, Saturation, Lightness) using linear
-        RGB_TO_HSY_VID,           // RGB to HSY (Hue, Saturation, Lightness) using video
-        HSY_LOG_TO_RGB,           // HSY (Hue, Saturation, Lightness) using log to RGB 
-        HSY_LIN_TO_RGB,           // HSY (Hue, Saturation, Lightness) using linear to RGB
-        HSY_VID_TO_RGB,           // HSY (Hue, Saturation, Lightness) using video to RGB
         HSV_TO_RGB,               // Classic HSV to RGB function
+        RGB_TO_HSY_LOG,           // RGB to HSY (Hue, Saturation, Lightness) using log
+        HSY_LOG_TO_RGB,           // HSY (Hue, Saturation, Lightness) using log to RGB 
+        RGB_TO_HSY_LIN,           // RGB to HSY (Hue, Saturation, Lightness) using linear
+        HSY_LIN_TO_RGB,           // HSY (Hue, Saturation, Lightness) using linear to RGB
+        RGB_TO_HSY_VID,           // RGB to HSY (Hue, Saturation, Lightness) using video
+        HSY_VID_TO_RGB,           // HSY (Hue, Saturation, Lightness) using video to RGB
         XYZ_TO_xyY,               // CIE XYZ to 1931 xy chromaticity coordinates
         xyY_TO_XYZ,               // Inverse of above
         XYZ_TO_uvY,               // CIE XYZ to 1976 u'v' chromaticity coordinates

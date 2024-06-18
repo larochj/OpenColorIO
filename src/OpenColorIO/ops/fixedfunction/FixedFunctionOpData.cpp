@@ -294,6 +294,21 @@ FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle 
         {
             return FixedFunctionOpData::RGB_TO_HSV;
         }
+        case FIXED_FUNCTION_RGB_TO_HSY_LIN:
+        {
+            return isForward ? FixedFunctionOpData::RGB_TO_HSY_LIN :
+                               FixedFunctionOpData::HSY_LIN_TO_RGB;
+        }
+        case FIXED_FUNCTION_RGB_TO_HSY_LOG:
+        {
+            return isForward ? FixedFunctionOpData::RGB_TO_HSY_LOG :
+                               FixedFunctionOpData::HSY_LOG_TO_RGB;
+        }
+        case FIXED_FUNCTION_RGB_TO_HSY_VID:
+        {
+            return isForward ? FixedFunctionOpData::RGB_TO_HSY_VID :
+                               FixedFunctionOpData::HSY_VID_TO_RGB;
+        }
         case FIXED_FUNCTION_XYZ_TO_xyY:
         {
             return FixedFunctionOpData::XYZ_TO_xyY;
@@ -370,10 +385,17 @@ FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style 
     case FixedFunctionOpData::LUV_TO_XYZ:
         return FIXED_FUNCTION_XYZ_TO_LUV;
     
-    // TODO: Implement the following conversions.
-    //case FixedFunctionOpData::RGB_TO_HSY_LIN:
-    //case FixedFunctionOpData::HSY_LIN_TO_RGB:
-    //    return FIXED_FUNCTION_RGB_TO_HSY_LIN;
+    case FixedFunctionOpData::RGB_TO_HSY_LIN:
+    case FixedFunctionOpData::HSY_LIN_TO_RGB:
+        return FIXED_FUNCTION_RGB_TO_HSY_LIN;
+
+    case FixedFunctionOpData::RGB_TO_HSY_LOG:
+    case FixedFunctionOpData::HSY_LOG_TO_RGB:
+        return FIXED_FUNCTION_RGB_TO_HSY_LOG;
+
+    case FixedFunctionOpData::RGB_TO_HSY_VID:
+    case FixedFunctionOpData::HSY_VID_TO_RGB:
+        return FIXED_FUNCTION_RGB_TO_HSY_VID;
 
     }
 
@@ -601,6 +623,39 @@ void FixedFunctionOpData::invert() noexcept
             break;
         }
 
+        case RGB_TO_HSY_LOG:
+        {
+            setStyle(HSY_LOG_TO_RGB);
+            break;
+        }
+        case HSY_LOG_TO_RGB:
+        {
+            setStyle(RGB_TO_HSY_LOG);
+            break;
+        }
+
+        case RGB_TO_HSY_LIN:
+        {
+            setStyle(HSY_LIN_TO_RGB);
+            break;
+        }
+        case HSY_LIN_TO_RGB:
+        {
+            setStyle(RGB_TO_HSY_LIN);
+            break;
+        }
+
+        case RGB_TO_HSY_VID:
+        {
+            setStyle(HSY_VID_TO_RGB);
+            break;
+        }
+        case HSY_VID_TO_RGB:
+        {
+            setStyle(RGB_TO_HSY_VID);
+            break;
+        }
+
         case XYZ_TO_xyY:
         {
             setStyle(xyY_TO_XYZ);
@@ -660,6 +715,9 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
     case FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD:
     case FixedFunctionOpData::REC2100_SURROUND_FWD:
     case FixedFunctionOpData::RGB_TO_HSV:
+    case FixedFunctionOpData::RGB_TO_HSY_LOG:
+    case FixedFunctionOpData::RGB_TO_HSY_LIN:
+    case FixedFunctionOpData::RGB_TO_HSY_VID:
     case FixedFunctionOpData::XYZ_TO_xyY:
     case FixedFunctionOpData::XYZ_TO_uvY:
     case FixedFunctionOpData::XYZ_TO_LUV:
@@ -673,6 +731,9 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
     case FixedFunctionOpData::ACES_GAMUT_COMP_13_INV:
     case FixedFunctionOpData::REC2100_SURROUND_INV:
     case FixedFunctionOpData::HSV_TO_RGB:
+    case FixedFunctionOpData::HSY_LOG_TO_RGB:
+    case FixedFunctionOpData::HSY_LIN_TO_RGB:
+    case FixedFunctionOpData::HSY_VID_TO_RGB:
     case FixedFunctionOpData::xyY_TO_XYZ:
     case FixedFunctionOpData::uvY_TO_XYZ:
     case FixedFunctionOpData::LUV_TO_XYZ:
