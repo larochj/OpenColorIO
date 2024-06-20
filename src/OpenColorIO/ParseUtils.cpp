@@ -361,6 +361,9 @@ const char * FixedFunctionStyleToString(FixedFunctionStyle style)
         case FIXED_FUNCTION_ACES_GAMUT_COMP_13:  return "ACES_GamutComp13";
         case FIXED_FUNCTION_REC2100_SURROUND:    return "REC2100_Surround";
         case FIXED_FUNCTION_RGB_TO_HSV:          return "RGB_TO_HSV";
+        case FIXED_FUNCTION_RGB_TO_HSY_LIN:      return "FIXED_FUNCTION_RGB_TO_HSY_LIN";
+        case FIXED_FUNCTION_RGB_TO_HSY_LOG:      return "FIXED_FUNCTION_RGB_TO_HSY_LOG";
+        case FIXED_FUNCTION_RGB_TO_HSY_VID:      return "FIXED_FUNCTION_RGB_TO_HSY_VID";
         case FIXED_FUNCTION_XYZ_TO_xyY:          return "XYZ_TO_xyY";
         case FIXED_FUNCTION_XYZ_TO_uvY:          return "XYZ_TO_uvY";
         case FIXED_FUNCTION_XYZ_TO_LUV:          return "XYZ_TO_LUV";

@@ -152,6 +152,7 @@ set(SOURCES
     ops/exposurecontrast/ExposureContrastOpGPU.cpp
     ops/fixedfunction/FixedFunctionOpGPU.cpp
     ops/gamma/GammaOpGPU.cpp
+    ops/gradinghuecurve/GradingHueCurveOpGPU.cpp
     ops/gradingprimary/GradingPrimaryOpGPU.cpp
     ops/gradingrgbcurve/GradingRGBCurveOpGPU.cpp
     ops/gradingtone/GradingToneOpGPU.cpp
@@ -256,6 +257,9 @@ set(TESTS
     ops/gradingprimary/GradingPrimaryOpData_tests.cpp
     ops/gradingprimary/GradingPrimaryOp_tests.cpp
     ops/gradingrgbcurve/GradingBSplineCurve_tests.cpp
+    ops/gradinghuecurve/GradingHueCurve_tests.cpp
+    ops/gradinghuecurve/GradingHueCurveOpData_tests.cpp
+    ops/gradinghuecurve/GradingHueCurveOp_tests.cpp
     ops/gradingrgbcurve/GradingRGBCurve_tests.cpp
     ops/gradingrgbcurve/GradingRGBCurveOpCPU_tests.cpp
     ops/gradingrgbcurve/GradingRGBCurveOpData_tests.cpp
@@ -304,6 +308,7 @@ set(TESTS
     transforms/ExposureContrastTransform_tests.cpp
     transforms/FileTransform_tests.cpp
     transforms/FixedFunctionTransform_tests.cpp
+    transforms/GradingHueCurveTransform_tests.cpp
     transforms/GradingPrimaryTransform_tests.cpp
     transforms/GradingRGBCurveTransform_tests.cpp
     transforms/GradingToneTransform_tests.cpp

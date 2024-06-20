@@ -18,10 +18,14 @@ class GradingBSplineCurveImpl : public GradingBSplineCurve
 {
 public:
     explicit GradingBSplineCurveImpl(size_t size);
+    explicit GradingBSplineCurveImpl(size_t size, BSplineCurveType curveType);
     GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints);
+    GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints, BSplineCurveType curveType);
     ~GradingBSplineCurveImpl() = default;
 
     GradingBSplineCurveRcPtr createEditableCopy() const override;
+    BSplineCurveType getCurveType() const override;
+    void setCurveType(BSplineCurveType curveType) override;
     size_t getNumControlPoints() const noexcept override;
     void setNumControlPoints(size_t size) override;
     const GradingControlPoint & getControlPoint(size_t index) const override;
@@ -57,11 +61,7 @@ public:
     {
         KnotsCoefs() = delete;
 
-        explicit KnotsCoefs(size_t numCurves)
-        {
-            m_knotsOffsetsArray.resize(2 * numCurves);
-            m_coefsOffsetsArray.resize(2 * numCurves);
-        }
+        explicit KnotsCoefs(size_t numCurves);
 
         // Pre-processing scalar values.
 
@@ -98,13 +98,16 @@ public:
         // add knots for curves that are simply identity.
         //
         // Maximum size of the knots array (for ALL curves).
-        static constexpr int MAX_NUM_KNOTS = 60;
+        static constexpr int MAX_NUM_KNOTS = 120;
         // Maximum size of the coefs array (for ALL curves).
-        static constexpr int MAX_NUM_COEFS = 180;
+        static constexpr int MAX_NUM_COEFS = 360;
 
         // Pre-processing arrays of length MAX_NUM_KNOTS and MAX_NUM_COEFS.
         std::vector<float> m_coefsArray;  // Contains packed coefs of ALL curves.
         std::vector<float> m_knotsArray;  // Contains packed knots of ALL curves.
+
+        int m_numCoefs = 0;
+        int m_numKnots = 0;
 
         float evalCurve(int curveIdx, float x) const;
         float evalCurveRev(int curveIdx, float x) const;
@@ -118,10 +121,15 @@ public:
                               const std::string & knotsOffsets, const std::string & coefsOffsets,
                               const std::string & knots, const std::string & coefs, bool isInv);
 private:
+    void computeKnotsAndCoefsForRGBCurve(KnotsCoefs & knotsCoefs, int curveIdx) const;
+    void computeKnotsAndCoefsForHueCurve(KnotsCoefs & knotsCoefs, int curveIdx) const;
+
     void validateIndex(size_t index) const;
 
     std::vector<GradingControlPoint> m_controlPoints;
     std::vector<float> m_slopesArray;  // Optional slope values for the control points.
+
+    BSplineCurveType m_curveType = BSplineCurveType::B_SPLINE;
 };
 
 bool IsGradingCurveIdentity(const ConstGradingBSplineCurveRcPtr & curve);

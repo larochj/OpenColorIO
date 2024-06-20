@@ -5,7 +5,9 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Logging.h"
-#include "ops/gradingrgbcurve/GradingRGBCurveOpGPU.h"
+#include "ops/gradinghuecurve/GradingHueCurveOpGPU.h"
+#include "ops/fixedfunction/FixedFunctionOpGPU.h"
+#include "ops/fixedfunction/FixedFunctionOpData.h"
 #include "utils/StringUtils.h"
 
 
@@ -105,8 +107,8 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
     {
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
-        // Need 2 ints for each RGBM curve.
-        stDecl.declareUniformArrayInt(name, 8);
+        // Need 2 ints for each curves.
+        stDecl.declareUniformArrayInt(name, 16); // TODO: Avoid magic numbers (8 Curves * 2 values)
         shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
     }
 }
@@ -136,7 +138,7 @@ std::string BuildResourceNameIndexed(GpuShaderCreatorRcPtr & shaderCreator, cons
     return name;
 }
 
-static const std::string opPrefix{ "grading_rgbcurve" };
+static const std::string opPrefix{ "grading_huecurve" };
 
 void SetGCProperties(GpuShaderCreatorRcPtr & shaderCreator, bool dynamic, GCProperties & propNames)
 {
@@ -173,7 +175,7 @@ void SetGCProperties(GpuShaderCreatorRcPtr & shaderCreator, bool dynamic, GCProp
 
 // Only called once for dynamic ops.
 void AddGCPropertiesUniforms(GpuShaderCreatorRcPtr & shaderCreator,
-                             DynamicPropertyGradingRGBCurveImplRcPtr & shaderProp,
+                             DynamicPropertyGradingHueCurveImplRcPtr & shaderProp,
                              const GCProperties & propNames)
 {
     // Use the shader dynamic property to bind the uniforms.
@@ -182,31 +184,31 @@ void AddGCPropertiesUniforms(GpuShaderCreatorRcPtr & shaderCreator,
     // Note: No need to add an index to the name to avoid collisions as the dynamic properties
     // are unique.
 
-    auto getNK = std::bind(&DynamicPropertyGradingRGBCurveImpl::getNumKnots, curveProp);
-    auto getKO = std::bind(&DynamicPropertyGradingRGBCurveImpl::getKnotsOffsetsArray,
+    auto getNK = std::bind(&DynamicPropertyGradingHueCurveImpl::getNumKnots, curveProp);
+    auto getKO = std::bind(&DynamicPropertyGradingHueCurveImpl::getKnotsOffsetsArray,
                            curveProp);
-    auto getK = std::bind(&DynamicPropertyGradingRGBCurveImpl::getKnotsArray, curveProp);
-    auto getNC = std::bind(&DynamicPropertyGradingRGBCurveImpl::getNumCoefs, curveProp);
-    auto getCO = std::bind(&DynamicPropertyGradingRGBCurveImpl::getCoefsOffsetsArray,
+    auto getK = std::bind(&DynamicPropertyGradingHueCurveImpl::getKnotsArray, curveProp);
+    auto getNC = std::bind(&DynamicPropertyGradingHueCurveImpl::getNumCoefs, curveProp);
+    auto getCO = std::bind(&DynamicPropertyGradingHueCurveImpl::getCoefsOffsetsArray,
                            curveProp);
-    auto getC = std::bind(&DynamicPropertyGradingRGBCurveImpl::getCoefsArray, curveProp);
-    auto getLB = std::bind(&DynamicPropertyGradingRGBCurveImpl::getLocalBypass, curveProp);
+    auto getC = std::bind(&DynamicPropertyGradingHueCurveImpl::getCoefsArray, curveProp);
+    auto getLB = std::bind(&DynamicPropertyGradingHueCurveImpl::getLocalBypass, curveProp);
     // Uniforms are added if they are not already there (added by another op).
-    AddUniform(shaderCreator, DynamicPropertyGradingRGBCurveImpl::GetNumOffsetValues,
+    AddUniform(shaderCreator, DynamicPropertyGradingHueCurveImpl::GetNumOffsetValues,
                getKO, propNames.m_knotsOffsets);
     AddUniform(shaderCreator, getNK, getK,
-               DynamicPropertyGradingRGBCurveImpl::GetMaxKnots(),
+               DynamicPropertyGradingHueCurveImpl::GetMaxKnots(),
                propNames.m_knots);
-    AddUniform(shaderCreator, DynamicPropertyGradingRGBCurveImpl::GetNumOffsetValues,
+    AddUniform(shaderCreator, DynamicPropertyGradingHueCurveImpl::GetNumOffsetValues,
                getCO, propNames.m_coefsOffsets);
     AddUniform(shaderCreator, getNC, getC,
-               DynamicPropertyGradingRGBCurveImpl::GetMaxCoefs(),
+               DynamicPropertyGradingHueCurveImpl::GetMaxCoefs(),
                propNames.m_coefs);
     AddUniform(shaderCreator, getLB, propNames.m_localBypass);
 }
 
 void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                                           ConstGradingRGBCurveOpDataRcPtr & gcData,
+                                           ConstGradingHueCurveOpDataRcPtr & gcData,
                                            const GCProperties & props,
                                            bool dyn)
 {
@@ -220,9 +222,9 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
 
         // 2 ints for each curve.
         st.newLine() << "";
-        st.declareIntArrayConst(props.m_knotsOffsets, 4 * 2, propGC->getKnotsOffsetsArray());
+        st.declareIntArrayConst(props.m_knotsOffsets, 8 * 2, propGC->getKnotsOffsetsArray()); // TODO: Avoid magic numbers (8 Curves * 2 values)
         st.declareFloatArrayConst(props.m_knots, propGC->getNumKnots(), propGC->getKnotsArray());
-        st.declareIntArrayConst(props.m_coefsOffsets, 4 * 2, propGC->getCoefsOffsetsArray());
+        st.declareIntArrayConst(props.m_coefsOffsets, 8 * 2, propGC->getCoefsOffsetsArray());
         st.declareFloatArrayConst(props.m_coefs, propGC->getNumCoefs(), propGC->getCoefsArray());
     }
 
@@ -253,13 +255,38 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
                         GpuShaderText & st,
                         const GCProperties & props,
                         bool dyn,
-                        bool doLinToLog)
+                        bool doLinToLog,
+                        GradingStyle style)
 {
     if (dyn)
     {
         st.newLine() << "if (!" << props.m_localBypass << ")";
         st.newLine() << "{";
         st.indent();
+    }    
+
+    // Add the conversion from RGB to HSY.
+    {
+      FixedFunctionOpData::Style hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
+      switch(style)
+      {
+        case GRADING_LIN:
+          hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
+          break;
+        case GRADING_LOG:
+          hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LOG;
+          break;
+        case GRADING_VIDEO:
+          hsyStyle = FixedFunctionOpData::RGB_TO_HSY_VID;
+          break;
+      }
+
+      st.newLine() << "{";   // establish scope so local variable names won't conflict
+      st.indent();
+      ConstFixedFunctionOpDataRcPtr funcOpData = std::make_shared<FixedFunctionOpData>(hsyStyle);
+      GetFixedFunctionGPUProcessingText(shaderCreator, st, funcOpData);
+      st.dedent();
+      st.newLine() << "}";
     }
 
     if (doLinToLog)
@@ -268,26 +295,64 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
         // floating-point arithmetic cause errors in the lowest bit of the round trip.
 
         st.newLine() << "// Convert from lin to log.";
-        AddLinToLogShader(shaderCreator, st);
+        AddLinToLogShaderChannelBlue(shaderCreator, st);
         st.newLine() << "";
     }
 
     const std::string pix(shaderCreator->getPixelName());
 
-    // Call the curve evaluation method for each curve.
-    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(0, " << pix << ".rgb.r, " << pix << ".rgb.r);"; // RED
-    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(1, " << pix << ".rgb.g, " << pix << ".rgb.g);"; // GREEN
-    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(2, " << pix << ".rgb.b, " << pix << ".rgb.b);"; // BLUE
-    // TODO: vectorize master.
-    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(3, " << pix << ".rgb.r, " << pix << ".rgb.r);"; // MASTER
-    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(3, " << pix << ".rgb.g, " << pix << ".rgb.g);"; // MASTER
-    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(3, " << pix << ".rgb.b, " << pix << ".rgb.b);"; // MASTER
+    st.newLine() << "";
+    st.newLine() << "float hueSatGain = max(0., " << props.m_eval << "(1, " << pix << ".r, 1.));"; // HUE-SAT
+    st.newLine() << "float hueLumGain = max(0., " << props.m_eval << "(2, " << pix << ".r, 1.));"; // HUE-LUM
+    st.newLine() << pix << ".r = " << props.m_eval << "(0, " << pix << ".r, " << pix << ".r);"; // HUE-HUE
+    st.newLine() << "" << pix << ".g = max(0., " << props.m_eval << "(4, " << pix << ".g, " << pix << ".g));"; // SAT-SAT
+    st.newLine() << "float lumSatGain = max(0., " << props.m_eval << "(3, " << pix << ".b, 1.));"; // LUM-SAT
+    st.newLine() << "float satGain = lumSatGain * hueSatGain;";
+    st.newLine() << "" << pix << ".g = satGain * " << pix << ".g;";
+    st.newLine() << "float satLumGain = max(0., " << props.m_eval << "(6, " << pix << ".g, 1.));"; // SAT-LUM
+    st.newLine() << pix << ".b = " << props.m_eval << "(5, " << pix << ".b, " << pix << ".b);"; // LUM-LUM
+    st.newLine() << "";
 
     if (doLinToLog)
     {
         st.newLine() << "";
         st.newLine() << "// Convert from log to lin.";
-        AddLogToLinShader(shaderCreator, st);
+        AddLogToLinShaderChannelBlue(shaderCreator, st);
+    }
+
+    st.newLine() << "";
+    st.newLine() << "hueLumGain = 1. - (1. - hueLumGain) * min( 1., " << pix << ".g );";
+    if (style == GRADING_LOG)
+      // Use shift rather than scale for log mode.
+      st.newLine() << pix << ".b = " << pix << ".b + (hueLumGain + satLumGain - 2.) * 0.1;";
+    else
+      // Note this is applied in linear space, for linear style.
+      st.newLine() << pix << ".b = " << pix << ".b * hueLumGain * satLumGain;";
+    st.newLine() << "";
+
+    st.newLine() << pix << ".r = " << pix << ".r - floor( " << pix << ".r );";
+    st.newLine() << pix << ".r = " << pix << ".r + " << props.m_eval << "(7, " << pix << ".r, 0.);"; // HUE-FX
+
+    {
+      FixedFunctionOpData::Style hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
+      switch(style)
+      {
+        case GRADING_LIN:
+          hsyStyle = FixedFunctionOpData::HSY_LIN_TO_RGB;
+          break;
+        case GRADING_LOG:
+          hsyStyle = FixedFunctionOpData::HSY_LOG_TO_RGB;
+          break;
+        case GRADING_VIDEO:
+          hsyStyle = FixedFunctionOpData::HSY_VID_TO_RGB;
+          break;
+      }
+      st.newLine() << "{";
+      st.indent();
+      ConstFixedFunctionOpDataRcPtr funcOpData = std::make_shared<FixedFunctionOpData>(hsyStyle);
+      GetFixedFunctionGPUProcessingText(shaderCreator, st, funcOpData);
+      st.dedent();
+      st.newLine() << "}";
     }
 
     if (dyn)
@@ -297,57 +362,59 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-void AddGCInverseShader(GpuShaderCreatorRcPtr & shaderCreator, 
-                        GpuShaderText & st,
-                        const GCProperties & props,
-                        bool dyn,
-                        bool doLinToLog)
-{
-    if (dyn)
-    {
-        st.newLine() << "if (!" << props.m_localBypass << ")";
-        st.newLine() << "{";
-        st.indent();
-    }
+// TODO: Implement the inverse shader.
+//void AddGCInverseShader(GpuShaderCreatorRcPtr & shaderCreator, 
+//                        GpuShaderText & st,
+//                        const GCProperties & props,
+//                        bool dyn,
+//                        bool doLinToLog,
+//                        GradingStyle style)
+//{
+//    if (dyn)
+//    {
+//        st.newLine() << "if (!" << props.m_localBypass << ")";
+//        st.newLine() << "{";
+//        st.indent();
+//    }
+//
+//    if (doLinToLog)
+//    {
+//        // NB:  Although the linToLog and logToLin are correct inverses, the limits of
+//        // floating-point arithmetic cause errors in the lowest bit of the round trip.
+//
+//        st.newLine() << "// Convert from lin to log.";
+//        AddLinToLogShader(shaderCreator, st);
+//        st.newLine() << "";
+//    }
+//
+//    const std::string pix(shaderCreator->getPixelName());
+//
+//    // Call the curve evaluation method for each curve.
+//    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(3, " << pix << ".rgb.r);"; // MASTER
+//    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(3, " << pix << ".rgb.g);"; // MASTER
+//    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(3, " << pix << ".rgb.b);"; // MASTER
+//    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(0, " << pix << ".rgb.r);"; // RED
+//    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(1, " << pix << ".rgb.g);"; // GREEN
+//    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(2, " << pix << ".rgb.b);"; // BLUE
+//
+//    if (doLinToLog)
+//    {
+//        st.newLine() << "";
+//        st.newLine() << "// Convert from log to lin.";
+//        AddLogToLinShader(shaderCreator, st);
+//    }
+//
+//    if (dyn)
+//    {
+//        st.dedent();
+//        st.newLine() << "}";
+//    }
+//}
 
-    if (doLinToLog)
-    {
-        // NB:  Although the linToLog and logToLin are correct inverses, the limits of
-        // floating-point arithmetic cause errors in the lowest bit of the round trip.
-
-        st.newLine() << "// Convert from lin to log.";
-        AddLinToLogShader(shaderCreator, st);
-        st.newLine() << "";
-    }
-
-    const std::string pix(shaderCreator->getPixelName());
-
-    // Call the curve evaluation method for each curve.
-    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(3, " << pix << ".rgb.r, " << pix << ".rgb.r);"; // MASTER
-    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(3, " << pix << ".rgb.g, " << pix << ".rgb.g);"; // MASTER
-    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(3, " << pix << ".rgb.b, " << pix << ".rgb.b);"; // MASTER
-    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(0, " << pix << ".rgb.r, " << pix << ".rgb.r);"; // RED
-    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(1, " << pix << ".rgb.g, " << pix << ".rgb.g);"; // GREEN
-    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(2, " << pix << ".rgb.b, " << pix << ".rgb.b);"; // BLUE
-
-    if (doLinToLog)
-    {
-        st.newLine() << "";
-        st.newLine() << "// Convert from log to lin.";
-        AddLogToLinShader(shaderCreator, st);
-    }
-
-    if (dyn)
-    {
-        st.dedent();
-        st.newLine() << "}";
-    }
 }
 
-}
-
-void GetGradingRGBCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                                        ConstGradingRGBCurveOpDataRcPtr & gcData)
+void GetHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
+                                 ConstGradingHueCurveOpDataRcPtr & gcData)
 {
     const bool dyn = gcData->isDynamic() &&  shaderCreator->getLanguage() != LANGUAGE_OSL_1;
     if (!dyn)
@@ -376,8 +443,7 @@ void GetGradingRGBCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     st.indent();
 
     st.newLine() << "";
-    st.newLine() << "// Add GradingRGBCurve '"
-                 << GradingStyleToString(style) << "' "
+    st.newLine() << "// Add GradingHueCurve '"
                  << TransformDirectionToString(dir) << " processing";
     st.newLine() << "";
     st.newLine() << "{";
@@ -397,10 +463,10 @@ void GetGradingRGBCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         shaderCreator->addDynamicProperty(newProp);
 
         // Add uniforms only if needed.
-        AddGCPropertiesUniforms(shaderCreator, shaderProp, properties);
+        AddGCPropertiesUniforms(shaderCreator, shaderProp, properties); // _addAttributeTextToShaderProgram
 
         // Add helper function plus global variables if they are not dynamic.
-        AddCurveEvalMethodTextToShaderProgram(shaderCreator, gcData, properties, dyn);
+        AddCurveEvalMethodTextToShaderProgram(shaderCreator, gcData, properties, dyn); // _addHelperMethodTextToShaderProgram
     }
     else
     {
@@ -408,14 +474,14 @@ void GetGradingRGBCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         AddCurveEvalMethodTextToShaderProgram(shaderCreator, gcData, properties, dyn);
     }
 
-    const bool doLinToLog = (style == GRADING_LIN) && !gcData->getBypassLinToLog();
+    const bool bypassLinToLog = (style == GRADING_LIN) && !gcData->getBypassLinToLog();
     switch (dir)
     {
     case TRANSFORM_DIR_FORWARD:
-        AddGCForwardShader(shaderCreator, st, properties, dyn, doLinToLog);
+        AddGCForwardShader(shaderCreator, st, properties, dyn, bypassLinToLog, style); // _addProcessingTextToShaderProgram
         break;
-    case TRANSFORM_DIR_INVERSE:
-        AddGCInverseShader(shaderCreator, st, properties, dyn, doLinToLog);
+    case TRANSFORM_DIR_INVERSE: // TODO: Implement the inverse shader.
+        //AddGCInverseShader(shaderCreator, st, properties, dyn, bypassLinToLog, style); // _addProcessingTextToShaderProgram
         break;
     }
 
